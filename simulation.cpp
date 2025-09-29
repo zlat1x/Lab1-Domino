@@ -1,6 +1,8 @@
 #include "simulation.h"
 #include <algorithm>
 #include <numeric>
+#include <stdexcept>
+#include <limits>
 
 namespace lab1::sim {
 
@@ -48,24 +50,72 @@ long long simulate_one_deal(domino_dealer& dealer) {
     return placed;
 }
 
-double mean(const std::vector<int>& xs) {
-    if (xs.empty()) return 0.0;
-    long long sum = 0; for (int v : xs) sum += v;
-    return double(sum) / double(xs.size());
+double mean(const VLL& xs) {
+    if (xs.empty()) throw std::invalid_argument("mean of empty");
+    long double s = 0;
+    for (long long v : xs) s += static_cast<long double>(v);
+    return static_cast<double>(s / xs.size());
 }
 
-double median(std::vector<int> xs) {
-    if (xs.empty()) return 0.0;
-    std::sort(xs.begin(), xs.end());
-    size_t m = xs.size() / 2;
-    if (xs.size() % 2) return double(xs[m]);
-    return 0.5 * (double(xs[m-1]) + double(xs[m]));
+double median(VLL xs) {
+    if (xs.empty()) throw std::invalid_argument("median of empty");
+    std::nth_element(xs.begin(), xs.begin() + xs.size()/2, xs.end());
+    long long mid = xs[xs.size()/2];
+    if (xs.size() % 2 == 1) return static_cast<double>(mid);
+    auto it = std::max_element(xs.begin(), xs.begin() + xs.size()/2);
+    long long mid2 = *it;
+    return (static_cast<long double>(mid) + static_cast<long double>(mid2)) / 2.0L;
 }
 
-std::vector<long long> histogram(const std::vector<int>& sizes, long long T) {
-    std::vector<long long> hist(static_cast<size_t>(T + 1), 0);
-    for (int s : sizes) if (0 <= s && s <= T) ++hist[static_cast<size_t>(s)];
-    return hist;
+stats_result compute_stats(const VLL& sizes) {
+    if (sizes.empty()) throw std::invalid_argument("sizes empty");
+    std::vector<std::pair<long long,long long>> pairs;
+    pairs.reserve(sizes.size());
+    VLL sorted = sizes;
+    std::sort(sorted.begin(), sorted.end());
+
+    long long current = sorted[0];
+    long long cnt = 1;
+
+    for (std::size_t i = 1; i < sorted.size(); ++i) {
+        if (sorted[i] == current) ++cnt;
+        else { pairs.push_back({current, cnt}); current = sorted[i]; cnt = 1; }
+    }
+
+    pairs.push_back({current, cnt});
+
+    long long best_size = pairs[0].first;
+    long long best_cnt = pairs[0].second;
+    for (const auto& p : pairs) {
+        if (p.second > best_cnt || (p.second == best_cnt && p.first < best_size)) {
+            best_cnt = p.second; best_size = p.first;
+        }
+    }
+
+    stats_result r;
+    r.hist_pairs = std::move(pairs);
+    r.mode_size = best_size;
+    r.mean_val = mean(sizes);
+    r.median_val = median(sizes);
+    return r;
+}
+
+std::vector<ratio_row> experiment_range(long long lo, long long hi,
+                                        long long deals_per_n, unsigned long long base_seed) {
+    if (hi < lo) std::swap(hi, lo);
+    std::vector<ratio_row> rows;
+    for (long long n = lo; n <= hi; ++n) {
+        lab1::domino::domino_dealer dealer(n, base_seed + static_cast<unsigned long long>(n));
+        VLL sizes;
+        sizes.reserve(static_cast<std::size_t>(deals_per_n));
+        for (long long d = 0; d < deals_per_n; ++d) sizes.push_back(simulate_one_deal(dealer));
+        const long long T = dealer.total_tiles();
+        const double m = mean(sizes);
+        const double med = median(sizes);
+        rows.push_back({ n, T, m / static_cast<double>(T), med / static_cast<double>(T) });
+        if (n == std::numeric_limits<long long>::max()) break; 
+    }
+    return rows;
 }
 
 } 
