@@ -22,5 +22,21 @@ static int wrong_input() {
 }
 
 int main() {
+    long long n = -1;
+    long long deals = -1;
+    unsigned long long seed = 0ULL;
+
+    std::cout << "Enter maximum pip n (tiles have numbers 0..n): ";
+    if (!(std::cin >> n) || n < 0) 
+        return wrong_input();
+
+    std::cout << "Enter number of deals to simulate: ";
+    if (!(std::cin >> deals) || deals <= 0) 
+        return wrong_input();
+
+    std::cout << "Optional: enter RNG seed (0 to use non-deterministic seed): ";
+    if (!(std::cin >> seed) || seed < 0) 
+        return wrong_input();
+
     return 0;
 }
