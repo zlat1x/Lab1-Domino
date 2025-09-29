@@ -27,7 +27,23 @@ namespace lab1::domino {
         unsigned long long f1 = static_cast<unsigned long long>(x) + 1ull;
         unsigned long long f2 = static_cast<unsigned long long>(x) + 2ull;
         if ((f1 & 1ull) == 0ull) f1 >>= 1; else f2 >>= 1;
-        
+
         return f1 * f2;
+    }
+
+    // Binary search for minimal j with tri_ull(j) > k
+    long long domino_dealer::find_j_for_index(long long n, long long k) {
+        unsigned long long kk = static_cast<unsigned long long>(k);
+
+        long long lo = 0, hi = n;
+        while (lo < hi) {
+            long long mid = lo + (hi - lo) / 2;
+            unsigned long long t = tri_ull(mid);
+            if (t > kk) 
+                hi = mid; 
+            else lo = mid + 1;
+        }
+
+        return lo;
     }
 }
