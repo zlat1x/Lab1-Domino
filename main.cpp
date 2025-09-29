@@ -36,8 +36,10 @@ int main() {
             return wrong_input();
 
         std::cout << "Optional: enter RNG seed (0 to use non-deterministic seed): ";
-        if (!(std::cin >> seed) || seed < 0) 
+        long long seed_ll = 0;
+        if (!(std::cin >> seed_ll) || seed_ll < 0) 
             return wrong_input();
+        seed = static_cast<unsigned long long>(seed_ll);
 
         // Single-n stats
         {
