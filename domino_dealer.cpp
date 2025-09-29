@@ -68,4 +68,36 @@ namespace lab1::domino {
         remaining_ = total_tiles_;
         perm_.clear();
     }
+
+    domino_tile domino_dealer::operator()() {
+        if (remaining_ <= 0) 
+            throw std::out_of_range("no tiles left");
+
+        std::uniform_int_distribution<long long> dist(0, remaining_ - 1);
+        long long r = dist(rng_);
+        long long last = remaining_ - 1;
+
+        long long val_r = r;
+        auto it_r = perm_.find(r);
+        if (it_r != perm_.end()) 
+            val_r = it_r->second;
+
+        long long val_last = last;
+        auto it_last = perm_.find(last);
+        if (it_last != perm_.end()) 
+            val_last = it_last->second;
+
+        perm_[r] = val_last;
+        if (it_last != perm_.end()) 
+            perm_.erase(it_last);
+
+        --remaining_;
+
+        const long long idx = val_r;
+        const long long j = find_j_for_index(n_, idx);
+        const unsigned long long base = tri_ull(j - 1);
+        const long long i = idx - static_cast<long long>(base);
+
+        return domino_tile{ i, j };
+    }
 }
