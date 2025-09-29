@@ -46,4 +46,26 @@ namespace lab1::domino {
 
         return lo;
     }
+
+    domino_dealer::domino_dealer(long long n, unsigned long long seed) : n_(n) {
+        if (n < 0) 
+            throw std::invalid_argument("n must be >= 0");
+
+        total_tiles_ = triangle_count(n);
+
+        if (seed == 0) {
+            std::random_device rd;
+            std::seed_seq seq{ rd(), rd(), rd(), rd() };
+            rng_ = std::mt19937_64(seq);
+        } else {
+            rng_.seed(seed);
+        }
+        
+        reset();
+    }
+
+    void domino_dealer::reset() {
+        remaining_ = total_tiles_;
+        perm_.clear();
+    }
 }
