@@ -38,5 +38,27 @@ int main() {
     if (!(std::cin >> seed) || seed < 0) 
         return wrong_input();
 
+    domino_dealer dealer(n, seed);
+    VLL sizes;
+    sizes.reserve(static_cast<std::size_t>(deals));
+    for (long long d = 0; d < deals; ++d) {
+        sizes.push_back(simulate_one_deal(dealer));
+    }
+
+    const auto st = compute_stats(sizes);
+
+    std::cout << "\nDistribution of deal sizes (tiles placed):\n";
+    std::cout << std::fixed << std::setprecision(4);
+    for (const auto& p : st.hist_pairs) {
+        long long s = p.first;
+        long long cnt = p.second;
+        double pct = 100.0 * static_cast<double>(cnt) / static_cast<double>(deals);
+        std::cout << "Size " << s << ": " << cnt << " deals, " << pct << "%\n";
+    }
+
+    std::cout << "\nMost frequent size: " << st.mode_size << "\n";
+    std::cout << "Mean size:   " << st.mean_val << "\n";
+    std::cout << "Median size: " << st.median_val << "\n";
+    
     return 0;
 }
